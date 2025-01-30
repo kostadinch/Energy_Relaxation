@@ -151,6 +151,10 @@ impl MicromagneticSystem {
             println!("Cell {}: m = {}", i, m);
         }
     }
+
+    pub fn get_magnetizations(&self) -> Vec<Array1<f64>> {
+        self.magnetizations.clone()
+    }
 }
 
 #[cfg(test)]

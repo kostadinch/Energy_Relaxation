@@ -1,6 +1,9 @@
 use magnetic_moments::MicromagneticSystem;
+use export_to_excel::export;
 use std::f64;
 mod magnetic_moments;
+mod export_to_excel;
+
 
 /// Constants for the simulation
 const DAMPING_CONSTANT: f64 = 0.8;
@@ -26,4 +29,10 @@ fn main() {
 
     // Output the final magnetization state
     system.print_magnetizations();
+
+    // Retrieve the magnetization vectors
+    let magnetizations = system.get_magnetizations();
+
+    // Export the magnetization vectors to an Excel file
+    export(magnetizations);
 }
