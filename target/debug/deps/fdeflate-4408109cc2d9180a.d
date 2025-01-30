@@ -1,0 +1,11 @@
+C:\Users\kchuc\Desktop\Energy Relaxation\target\debug\deps\libfdeflate-4408109cc2d9180a.rmeta: C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src/lib.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\compress.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\decompress.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\huffman.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\tables.rs
+
+C:\Users\kchuc\Desktop\Energy Relaxation\target\debug\deps\libfdeflate-4408109cc2d9180a.rlib: C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src/lib.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\compress.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\decompress.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\huffman.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\tables.rs
+
+C:\Users\kchuc\Desktop\Energy Relaxation\target\debug\deps\fdeflate-4408109cc2d9180a.d: C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src/lib.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\compress.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\decompress.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\huffman.rs C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\tables.rs
+
+C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src/lib.rs:
+C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\compress.rs:
+C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\decompress.rs:
+C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\huffman.rs:
+C:\Users\kchuc\.cargo\registry\src\index.crates.io-6f17d22bba15001f\fdeflate-0.3.7\src\tables.rs:
