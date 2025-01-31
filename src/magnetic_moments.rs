@@ -9,12 +9,12 @@ use crate::SPATIAL_DISCRETION_STEP;
 use crate::TOLERANCE;
 use crate::UNIAXIAL_ANISOTROPY_CONSTANT;
 use ndarray::Array1;
-use std::f64::consts::PI;
+use rand::Rng;
 
 ///# Micromagnetic System
 /// Struct to represent the magnetic system
 pub struct MicromagneticSystem {
-    // Magnetization array (1D grid )
+    // Magnetization vectors
     magnetizations: Vec<Array1<f64>>,
     // Number particles
     size: usize,
@@ -22,15 +22,15 @@ pub struct MicromagneticSystem {
 
 impl MicromagneticSystem {
     ///# New Micromagnetic System
-    /// Initialize the system with a uniform profile close to the easy axis
+    /// Initialize the micromagnetic system with random magnetizations
     pub fn new(size: usize) -> Self {
         let mut magnetizations = vec![Array1::zeros(3); size];
         for i in 0..size {
-            magnetizations[i][[0]] = (2.0 * PI * i as f64 / size as f64).sin();
-            magnetizations[i][[1]] = (2.0 * PI * i as f64 / size as f64).cos();
-            magnetizations[i][[2]] = (PI * i as f64 / size as f64).sin();
-            let norm = magnetizations[i].dot(&magnetizations[i]);
-            magnetizations[i] /= norm.sqrt();
+            let mut rng = rand::rng();
+            magnetizations[i][[0]] = rng.random_range(-1.0..=1.0);
+            magnetizations[i][[1]] = rng.random_range(-1.0..=1.0);
+            magnetizations[i][[2]] = rng.random_range(-1.0..=1.0);
+            magnetizations[i] /= 3.0;
         }
         // Create the system
         Self {
@@ -68,8 +68,10 @@ impl MicromagneticSystem {
         // This preferred direction minimizes the anisotropy energy when the
         // magnetization aligns with it.
         for i in 0..self.size {
-            let scalar_product_of_the_magnetization_and_the_easy_axis =
-                self.magnetizations[i].dot(&Array1::from(EASY_AXIS.to_vec())); // Dot product with easy axis
+            let scalar_product_of_the_magnetization_and_the_easy_axis = self.magnetizations[i][0]
+                * EASY_AXIS[0]
+                + self.magnetizations[i][1] * EASY_AXIS[1]
+                + self.magnetizations[i][2] * EASY_AXIS[2]; // Dot product with easy axis
             h_eff[i] = h_eff[i].clone()
                 + 2.0
                     * UNIAXIAL_ANISOTROPY_CONSTANT
@@ -104,10 +106,13 @@ impl MicromagneticSystem {
         // Goes through each cell and updates the magnetization
         for i in 0..self.size {
             // Calculate the change in magnetization
-            let change_of_magnetization =
-                -DAMPING_CONSTANT * GYROMAGNETIC_RATIO * h_eff[i].clone() * SATURATION_MAGNETIZATION;
-            
-            //calculate the maximum change in magnetization
+            let change_of_magnetization = -DAMPING_CONSTANT
+                * GYROMAGNETIC_RATIO
+                * h_eff[i].clone()
+                * SATURATION_MAGNETIZATION;
+
+            // Calculate the maximum change in magnetization
+            // and update the magnetization
             max_change = max_change.max(
                 change_of_magnetization
                     .iter()
@@ -117,8 +122,8 @@ impl MicromagneticSystem {
 
             // Update magnetization and normalize it
             self.magnetizations[i] = &self.magnetizations[i] + &change_of_magnetization;
-            let norm = self.magnetizations[i].dot(&self.magnetizations[i]);
-            self.magnetizations[i] /= norm.sqrt();
+            let norm = self.magnetizations[i].dot(&self.magnetizations[i]).sqrt();
+            self.magnetizations[i] /= norm;
         }
 
         max_change
@@ -146,12 +151,15 @@ impl MicromagneticSystem {
         );
     }
 
+
+    ///# Print Magnetizations
     pub fn print_magnetizations(&self) {
         for (i, m) in self.magnetizations.iter().enumerate() {
             println!("Cell {}: m = {}", i, m);
         }
     }
 
+    ///# Get Magnetizations
     pub fn get_magnetizations(&self) -> Vec<Array1<f64>> {
         self.magnetizations.clone()
     }
@@ -220,5 +228,18 @@ mod tests {
         let system = MicromagneticSystem::new(size);
         system.print_magnetizations();
         // This test just ensures that the function runs without panicking
+    }
+
+    #[test]
+    /// Test the get_magnetizations function
+    fn test_get_magnetizations() {
+        let size = 10;
+        let system = MicromagneticSystem::new(size);
+        let magnetizations = system.get_magnetizations();
+        assert_eq!(magnetizations.len(), size);
+        for m in magnetizations {
+            assert_eq!(m.len(), 3);
+            assert!(m.iter().all(|&x| x >= -1.0 && x <= 1.0));
+        }
     }
 }
