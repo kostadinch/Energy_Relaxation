@@ -1,0 +1,7 @@
+C:\Users\kchuc\Desktop\Energy Relaxation\target\debug\deps\libEnergy_Relaxation-bd034b9ec5b80ffa.rmeta: src/main.rs src\magnetic_moments.rs src\export_to_excel.rs
+
+C:\Users\kchuc\Desktop\Energy Relaxation\target\debug\deps\Energy_Relaxation-bd034b9ec5b80ffa.d: src/main.rs src\magnetic_moments.rs src\export_to_excel.rs
+
+src/main.rs:
+src\magnetic_moments.rs:
+src\export_to_excel.rs:
