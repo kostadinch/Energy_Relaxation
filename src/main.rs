@@ -6,16 +6,29 @@ mod export_to_excel;
 
 
 /// Constants for the simulation
-const DAMPING_CONSTANT: f64 = 0.5;
-const GYROMAGNETIC_RATIO: f64 = 2.21e5;
-const SATURATION_MAGNETIZATION: f64 = 8.0e5;
-const EXCHANGE_STIFFNESS_CONSTANT: f64 = 1.3e-11;
+
+// Exchange interaction constants
+const MAGNETIC_EXCHANGE_CONSTANT: f64 = 2.1e-11;
+const SATURATION_MAGNETIZATION: f64 = 1.71e6;
+const PERMEABILITY_OF_FREE_SPACE: f64 = 4.0 * f64::consts::PI * 1.0e-7;
 const SPATIAL_DISCRETION_STEP: f64 = 1.0e-9;
-const MAX_ITERATIONS_NUMBER: usize = 35000;
+
+// Anisotropy interaction constant 
+const UNIAXIAL_ANISOTROPY_CONSTANT: f64 = 4.8e4;
+const EASY_AXIS: [f64; 3] = [1.0, 0.0, 0.0];
+
+// Zeeman interaction constant
+const EXTERNAL_FIELD: [f64;3] = [0.0,0.0,0.5];
+
+// Energy calculation constants
+const TIME_STEP: f64 = 1e-15;
+const DAMPING_CONSTANT: f64 = 0.2;
+const GILBERT_GYROMAGNETIC_RATIO: f64 = 1.83e10;
+
+// Iteration parameters
+const MAX_ITERATIONS_NUMBER: usize = 10000;
 const TOLERANCE: f64 = 1e-6;
-const UNIAXIAL_ANISOTROPY_CONSTANT: f64 = 1.0e4;
-const EXTERNAL_FIELD: f64 = 0.5;
-const EASY_AXIS: [f64; 3] = [0.0, 0.0, 1.0];
+  
 
 fn main() {
     // Number of cells in the 1D grid

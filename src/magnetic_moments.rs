@@ -1,14 +1,18 @@
+use std::time;
+
 use crate::DAMPING_CONSTANT;
 use crate::EASY_AXIS;
-use crate::EXCHANGE_STIFFNESS_CONSTANT;
 use crate::EXTERNAL_FIELD;
-use crate::GYROMAGNETIC_RATIO;
+use crate::GILBERT_GYROMAGNETIC_RATIO;
+use crate::MAGNETIC_EXCHANGE_CONSTANT;
 use crate::MAX_ITERATIONS_NUMBER;
+use crate::PERMEABILITY_OF_FREE_SPACE;
 use crate::SATURATION_MAGNETIZATION;
 use crate::SPATIAL_DISCRETION_STEP;
+use crate::TIME_STEP;
 use crate::TOLERANCE;
 use crate::UNIAXIAL_ANISOTROPY_CONSTANT;
-use ndarray::Array1;
+use ndarray::{array, Array1};
 use rand::Rng;
 
 ///# Micromagnetic System
@@ -30,7 +34,8 @@ impl MicromagneticSystem {
             magnetizations[i][[0]] = rng.random_range(-1.0..=1.0);
             magnetizations[i][[1]] = rng.random_range(-1.0..=1.0);
             magnetizations[i][[2]] = rng.random_range(-1.0..=1.0);
-            magnetizations[i] /= 3.0;
+            let norm = (magnetizations[i].dot(&magnetizations[i]) as f64).sqrt();
+            magnetizations[i] /= norm;
         }
         // Create the system
         Self {
@@ -54,7 +59,8 @@ impl MicromagneticSystem {
         // penalizes sharp changes, creating a preference for uniform magnetization.
         for i in 1..(self.size - 1) {
             h_eff[i] = h_eff[i].clone()
-                + (2.0 * EXCHANGE_STIFFNESS_CONSTANT / SATURATION_MAGNETIZATION)
+                + (2.0 * MAGNETIC_EXCHANGE_CONSTANT
+                    / (SATURATION_MAGNETIZATION * PERMEABILITY_OF_FREE_SPACE))
                     * (self.magnetizations[i + 1].clone() - 2.0 * self.magnetizations[i].clone()
                         + self.magnetizations[i - 1].clone())
                     / (SPATIAL_DISCRETION_STEP * SPATIAL_DISCRETION_STEP);
@@ -68,15 +74,16 @@ impl MicromagneticSystem {
         // This preferred direction minimizes the anisotropy energy when the
         // magnetization aligns with it.
         for i in 0..self.size {
-            let scalar_product_of_the_magnetization_and_the_easy_axis = self.magnetizations[i][0]
-                * EASY_AXIS[0]
-                + self.magnetizations[i][1] * EASY_AXIS[1]
-                + self.magnetizations[i][2] * EASY_AXIS[2]; // Dot product with easy axis
+            //Dot product of the magnetization and the easy axis
+            let scalar_product_of_the_magnetization_and_the_easy_axis =
+                self.magnetizations[i].dot(&Array1::from_vec(EASY_AXIS.to_vec()));
+
             h_eff[i] = h_eff[i].clone()
                 + 2.0
                     * UNIAXIAL_ANISOTROPY_CONSTANT
                     * scalar_product_of_the_magnetization_and_the_easy_axis
-                    / SATURATION_MAGNETIZATION;
+                    / (SATURATION_MAGNETIZATION * PERMEABILITY_OF_FREE_SPACE)
+                    * Array1::from_vec(EASY_AXIS.to_vec());
         }
 
         // Zeeman Field
@@ -86,12 +93,89 @@ impl MicromagneticSystem {
         // align the magnetization with the external field direction
         // to minimize the Zeeman energy.
         for i in 0..self.size {
-            h_eff[i] += EXTERNAL_FIELD;
+            h_eff[i] = h_eff[i].clone()
+                + Array1::from_vec(EXTERNAL_FIELD.to_vec()) / (PERMEABILITY_OF_FREE_SPACE);
         }
 
         // returns the total effective field
         h_eff
     }
+
+    fn compute_magnetic_energy_density(&self) -> f64 {
+        let mut magnetic_energy_density = 0.0;
+
+        //Exchange energy
+        for i in 1..(self.size - 1) {
+            magnetic_energy_density += -MAGNETIC_EXCHANGE_CONSTANT
+                * self.magnetizations[i].dot(&self.magnetizations[i + 1])
+                / (SATURATION_MAGNETIZATION * PERMEABILITY_OF_FREE_SPACE);
+        }
+
+        //Anisotropy energy
+        for i in 0..self.size {
+            let scalar_product_of_the_magnetization_and_the_easy_axis =
+                self.magnetizations[i].dot(&Array1::from_vec(EASY_AXIS.to_vec()));
+            magnetic_energy_density += -UNIAXIAL_ANISOTROPY_CONSTANT
+                * scalar_product_of_the_magnetization_and_the_easy_axis;
+        }
+
+        //Zeeman energy
+        for i in 0..self.size {
+            let external_field_dot_m =
+                self.magnetizations[i].dot(&Array1::from_vec(EXTERNAL_FIELD.to_vec()));
+            magnetic_energy_density += -external_field_dot_m;
+        }
+
+        magnetic_energy_density
+    }
+
+    fn compute_magnetization_change(
+        &self,
+    ) -> Vec<Array1<f64>> {
+        let mut partial_derivative_of_the_magnetization_with_respect_to_time: Vec<Array1<f64>> =
+            vec![Array1::zeros(3); self.size];
+        let mut magnetization_change: Vec<Array1<f64>> = vec![Array1::zeros(3); self.size];
+
+        let h_eff = self.compute_effective_field();
+        for i in 0..self.size {
+            let m = &self.magnetizations[i];
+            let h = &h_eff[i];
+            let m_cross_h = array![
+                m[1] * h[2] - m[2] * h[1],
+                m[2] * h[0] - m[0] * h[2],
+                m[0] * h[1] - m[1] * h[0]
+            ];
+            let m_cross_m_cross_h = array![
+                m[1] * m_cross_h[2] - m[2] * m_cross_h[1],
+                m[2] * m_cross_h[0] - m[0] * m_cross_h[2],
+                m[0] * m_cross_h[1] - m[1] * m_cross_h[0]
+            ];
+            partial_derivative_of_the_magnetization_with_respect_to_time[i] =
+                -GILBERT_GYROMAGNETIC_RATIO / (1.0 + DAMPING_CONSTANT.powi(2))
+                    * (m_cross_h + DAMPING_CONSTANT * m_cross_m_cross_h);
+            magnetization_change[i] = TIME_STEP
+                * &partial_derivative_of_the_magnetization_with_respect_to_time[i];
+        }
+
+        magnetization_change
+    }
+
+    fn compute_energy_change(&mut self) -> f64 {
+        let magnetization_change = self.compute_magnetization_change();
+        let h_eff = self.compute_effective_field();
+        let mut energy_change = 0.0;
+        for i in 0..self.size {
+            let m = &self.magnetizations[i];
+            let h = &h_eff[i];
+            let h_dot_magnetization_change = h.dot(&magnetization_change[i]);
+            energy_change=-h_dot_magnetization_change*SATURATION_MAGNETIZATION*PERMEABILITY_OF_FREE_SPACE;
+        }
+        energy_change
+    }
+
+    
+
+
 
     /// #Relaxation Step
     /// Perform a single relaxation step to minimize energy
@@ -107,7 +191,7 @@ impl MicromagneticSystem {
         for i in 0..self.size {
             // Calculate the change in magnetization
             let change_of_magnetization = -DAMPING_CONSTANT
-                * GYROMAGNETIC_RATIO
+                * GILBERT_GYROMAGNETIC_RATIO
                 * h_eff[i].clone()
                 * SATURATION_MAGNETIZATION;
 
@@ -150,7 +234,6 @@ impl MicromagneticSystem {
             MAX_ITERATIONS_NUMBER
         );
     }
-
 
     ///# Print Magnetizations
     pub fn print_magnetizations(&self) {
